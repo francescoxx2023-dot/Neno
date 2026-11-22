@@ -1,0 +1,30 @@
+    if (!key && !sinKeyOk(id)) return alert('Pegá tu API key primero.');
+    if (!modelo) return alert('Elegí o escribí un modelo.');
+    if (!desc) return alert('Describí el script primero.');
+
+    keys[id] = key; modelosGuardados[id] = modelo; if (id === 'custom') bases[id] = baseInput.value.trim();
+    guardar('lua_prov', id); guardar('lua_modelos', modelosGuardados); guardar('lua_bases', bases);
+    if (recordar.checked) guardar('lua_keys', keys); else borrar('lua_keys');
+
+    const reglas = 'Sos un experto en scripting de Roblox (Luau) para ejecutores como Delta. Generá únicamente el código Lua del script, listo para pegar y ejecutar. ' +
+      'No agregues explicaciones fuera del código; podés usar comentarios dentro del script. Usá game:GetService para los servicios de Roblox y no dependas de librerías externas.';
+    const prompt = ($('modificar').checked && codigo)
+      ? reglas + '\n\nScript actual:\n' + codigo + '\n\nCambios pedidos: ' + desc + '\n\nDevolvé el script completo actualizado.'
+      : reglas + '\n\nDescripción del script: ' + desc;
+
+    btn.disabled = true; $('estado').classList.remove('error'); $('estado').textContent = 'Generando...'; output.textContent = 'Generando...';
+    try {
+      const texto = await pedir(id, key, modelo, prompt);
+      if (!texto) throw new Error('La IA no devolvió texto.');
+      codigo = extraer(texto);
+      mostrar();
+      $('estado').textContent = 'Listo.';
+    } catch (err) {
+      output.textContent = 'Acá aparecerá el script...';
+      $('estado').textContent = '❌ ' + (err instanceof TypeError ? 'No se pudo conectar (¿CORS, URL incorrecta o sin internet?). Probá con OpenRouter.' : err.message);
+      $('estado').classList.add('error');
+    } finally { btn.disabled = false; }
+  });
+</script>
+</body>
+</html>
